@@ -1,0 +1,17 @@
+# M1 Configuration
+data_root: data/raw
+train_img_dir: data/raw/train/train_images
+train_ann: data/raw/train/MAGFiLO_1.0_Annotations_kaggle2026_train.json
+test_img_dir: data/raw/test/test_images
+
+img_size: 512
+batch_size: 8
+epochs: 50
+lr: 1e-4
+weight_decay: 1e-5
+encoder: resnet34
+encoder_weights: imagenet
+
+checkpoint_dir: ./weights
+output_dir: ./outputs
+log_dir: ./logs

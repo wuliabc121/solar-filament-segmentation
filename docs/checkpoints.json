@@ -1,0 +1,6 @@
+{
+  "team/m1/weights/best_model.pth": "b8668a0ab301cfdd6d9edf4d0b9ea523417ef192bc3ada0bdb8839461f05a6f8",
+  "team/m2/weights/best.pt": "7f74f030a4822d1cc1fb8b719caf092af6f1f451f829729471b5349d557801a9",
+  "runs/structure_dicecl_e10/weights/last_inference.pt": "2c67c6c9164c5d86ea760ee07c9e5e44e0894b8e71c590bcaab17ce8e58de3fb",
+  "deployments/m3_quality_v1/head_epoch40.pt": "7fdbd767420cdcec723042b463ad779dbc22653fa7548b935e28edfdbb8de80a"
+}

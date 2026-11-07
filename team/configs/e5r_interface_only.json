@@ -1,0 +1,11 @@
+{
+  "alpha": 0.5,
+  "threshold": 0.5,
+  "radius": 0,
+  "min_area": 8,
+  "fallback": false,
+  "fallback_score": 0.8,
+  "min_coverage": 0.0,
+  "residual": true,
+  "endpoint_guard": 2
+}

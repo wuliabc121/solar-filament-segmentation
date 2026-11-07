@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:m3:instances:v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "observation_id",
+    "image_size",
+    "coordinate_convention",
+    "source",
+    "instances"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "m3.instances.v1"
+    },
+    "observation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "image_size": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "coordinate_convention": {
+      "const": "xyxy_half_open;mask_hw;coco_fortran_rle"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "run_id"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "instances": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "instance_id",
+          "segmentation",
+          "bbox",
+          "score",
+          "source_run_id"
+        ],
+        "properties": {
+          "instance_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source_run_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bbox": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "segmentation": {
+            "type": "object",
+            "required": [
+              "size",
+              "counts"
+            ],
+            "properties": {
+              "size": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "counts": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$comment": "Additional runtime checks in schema.validate_record enforce RLE coverage, original dimensions, bbox equality, unique IDs and optional mask exclusivity. JSON Schema alone is insufficient."
+}
