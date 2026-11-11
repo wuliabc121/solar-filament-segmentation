@@ -1,0 +1,51 @@
+{
+  "asset": "solar-filament-m4-e5-weights-v1.zip",
+  "sha256": "bdce2995a3c10c312994865c7de1f4ea3bc08d4dff337243afe9613d0ecae10b",
+  "bytes": 3635617,
+  "format": "solar-filament-m4-v1",
+  "source_upstream_commit": "76185bdfc296249ebf6f7f776926654b30998a5b",
+  "dataset_sha256": "a6a1a547125e6210ea351cf45ad4e6c5f17cd98f4f2d05d068ee96ff3a5e15c7",
+  "fit_images": 500,
+  "fit_positives": 2317,
+  "seed": 20261109,
+  "weights": {
+    "t00": {
+      "filename": "m4-e5-t00.pt",
+      "sha256": "f14a8b025a768b246a2917d0f6c4b32a36a2389256faa6fe9d2605dda7865d7f",
+      "bytes": 1967363,
+      "source_checkpoint_sha256": "e759473c913e1b406db078bcd09ccfec3c1fb2f3d0d85032dcfa67429f32532b",
+      "config": {
+        "width": 16,
+        "architecture": "direct",
+        "prior": 0,
+        "loss": "base",
+        "aug": "none",
+        "lr": 0.001,
+        "schedule": "constant",
+        "weight_decay": 0.0001,
+        "weights": "uniform"
+      },
+      "threshold": 0.5,
+      "holdout_pq": 0.4103183914104549
+    },
+    "t88": {
+      "filename": "m4-e5-t88.pt",
+      "sha256": "63807c8b0e72bb417eadc56a6ba77777a7ce04905f7d50ad75be97824cb1ce0e",
+      "bytes": 1967363,
+      "source_checkpoint_sha256": "33b7d5f3f50bbba06e88ac38aa0a9f69d3ed51dbeb8c0e6368d3100b3e009565",
+      "config": {
+        "width": 16,
+        "architecture": "direct",
+        "prior": 0,
+        "loss": "dice2",
+        "aug": "none",
+        "lr": 0.001,
+        "schedule": "constant",
+        "weight_decay": 0.0001,
+        "weights": "small"
+      },
+      "threshold": 0.35,
+      "holdout_pq": 0.40891330829656825
+    }
+  }
+}

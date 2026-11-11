@@ -1,0 +1,68 @@
+# M4 精修实验与复现
+
+基于原仓库提交 `76185bdfc296249ebf6f7f776926654b30998a5b`。当前 M4 以冻结 E5 候选为输入。100 组实验先在 A 折用统一预算初筛，其中原 30 组复用核验结果，本轮新增 70 次训练。七组入围后在 E、F 两折各训练四轮。T88 用小目标加权与双倍 Dice，在两折的平均 PQ 为 0.4105。固定阈值 0.35 后使用全部 500 张训练图的 2,317 个正样本重训。
+
+## 方案和结果
+
+| 同一批 103 张留出图 | 输入与处理 | PQ | TP | FP | FN |
+|---|---|---:|---:|---:|---:|
+| M1 | M1 语义图，阈值 0.50，八邻域连通域面积至少 400 像素 | 0.3665 | 542 | 374 | 455 |
+| M2 | M2 语义图，阈值 0.35，同样的连通域设置 | 0.4094 | 654 | 504 | 343 |
+| M3 | S 骨干的实例掩膜，使用发布质量头评分 | 0.3829 | 558 | 395 | 439 |
+| E5 | M1 和 M2 概率等权融合，在概率至少 0.50 的区域保留 M3 实例掩膜 | 0.3816 | 536 | 350 | 461 |
+| E5 → M4 T00 | 每个 E5 候选由 TinyUNet 精修，训练用 BCE 与 Dice，推理阈值 0.50 | 0.4103 | 574 | 312 | 423 |
+| E5 → M4 T88 | 同一 E5 候选和网络，训练加权小目标并加倍 Dice，推理阈值 0.35 | 0.4089 | 566 | 320 | 431 |
+
+三条 E5 路线共用 591 个候选。M4 的三个输入通道是灰度图、M1/M2 融合概率和当前候选掩膜。输出贴回原图后按原候选优先级处理重叠。T00 相比 E5 提高 2.87 个 PQ 点。T00 相比同集最强单模块 M2 高 0.09 个点，日期组配对重采样 95% 区间为 −1.65 至 +1.83 个点。
+
+原仓库的随机 141 张开发图上，M1、M2、M3 的 PQ 分别为 0.3789、0.4331、0.3649。该批图有 101 张与 M2 的训练清单重叠。表中的 M2 使用相同发布权重和连通域规则，当前 103 张图与其训练清单互斥。M1、M3 的发布模型在当前留出图上有已知历史重叠。这些分数是冻结候选条件下的本地配对评测。
+
+[M1–M3 原仓库指标](../../docs/random20_metrics.json) · [六方案核验指标](results/aligned_holdout.json) · [100 组完整结果](results/100_trials.csv) · [100 组核验指标](results/100_trials.json) · [逐方向实验](results/targeted.json)
+
+## 权重下载
+
+在 [model-weights-v1](https://github.com/wuliabc121/solar-filament-segmentation/releases/tag/model-weights-v1) 下载：
+
+| 文件 | 内容 | ZIP SHA-256 |
+|---|---|---|
+| [solar-filament-model-weights.zip](https://github.com/wuliabc121/solar-filament-segmentation/releases/download/model-weights-v1/solar-filament-model-weights.zip) | 原 M1、M2、M3 骨干和 M3 质量头 | `ff2ea9416b1f70e6c26af6cb6cc73ac65bf76407bd08251fcf6172a5a940d2ac` |
+| [solar-filament-m4-e5-weights-v1.zip](https://github.com/wuliabc121/solar-filament-segmentation/releases/download/model-weights-v1/solar-filament-m4-e5-weights-v1.zip) | T00、T88 的模型张量和清单 | `bdce2995a3c10c312994865c7de1f4ea3bc08d4dff337243afe9613d0ecae10b` |
+
+原压缩包内的文件按 [上游权重清单](../../docs/checkpoints.json) 放置。M4 压缩包可解到任意目录。两份权重来自 103 张留出对照所用的全量检查点，导出时只保留模型参数和必要推理配置。逐文件 SHA-256 及来源见 [M4 权重清单](m4_weights.json)。
+
+## 运行
+
+在仓库根目录运行。使用原仓库的 Python 3.11 团队环境和 MAGFiLO 官方标注。可按 [原仓库 README](../../README.md) 生成 M1、M2 的原图概率缓存以及 M3 的实例 JSONL。训练用团队原划分中的 500 张图，留出评分默认读取同一协议的 103 张图。原图文件名使用观测 ID 加 `.jpeg`。
+
+```sh
+export PYTHONPATH=src:.
+./team.sh fuse --instances runs/m3/instances.jsonl --cnn runs/m1_prob \
+  --transformer runs/m2_prob --config team/configs/e5_interface_only.json \
+  --run-id e5-holdout --purpose application --output runs/e5_holdout.jsonl
+
+.team-env/bin/python -m m4_filament refine --images runs/holdout_images \
+  --m1 runs/m1_prob --m2 runs/m2_prob --coarse runs/e5_holdout.jsonl \
+  --checkpoint weights/m4/m4-e5-t00.pt --device cuda \
+  --output runs/e5_t00.jsonl
+
+.team-env/bin/python -m m4_filament components --model m2 \
+  --images runs/holdout_images --probabilities runs/m2_prob --output runs/m2_instances.jsonl
+
+.team-env/bin/python -m m4_filament score --annotations data/raw/train/MAGFiLO_1.0_Annotations_kaggle2026_train.json \
+  --prediction m2=runs/m2_instances.jsonl --prediction e5=runs/e5_holdout.jsonl \
+  --prediction e5_t00=runs/e5_t00.jsonl --output runs/m4_aligned_score
+```
+
+训练先用同一 E5 配置在 500 张训练图上生成候选，再从匹配正样本构造裁片。每张图使用按记录 ID 排序的第一个标注版本。候选与 GT 需要互为唯一最佳，掩膜 IoU 至少 0.30，领先次佳 GT 至少 0.05。以候选为中心保留 32 像素上下文，裁片需容纳完整目标。全量训练四轮，使用 CUDA BF16 前向和 FP32 损失。
+
+```sh
+.team-env/bin/python -m m4_filament prepare --images data/raw/train/train_images \
+  --m1 runs/train_m1_prob --m2 runs/train_m2_prob --coarse runs/e5_train.jsonl \
+  --annotations data/raw/train/MAGFiLO_1.0_Annotations_kaggle2026_train.json \
+  --output runs/m4_positive_crops
+
+.team-env/bin/python -m m4_filament train --dataset runs/m4_positive_crops \
+  --recipe t88 --threshold 0.35 --output weights/m4/m4-e5-t88-refit.pt
+```
+
+初筛用 `--stop-after 2 --exclude experiments/m4_e5/dev_a.json`。E、F 折用四轮训练，并分别传入 `dev_e.json`、`dev_f.json` 和固定种子 20261810、20261918。评分时将对应名单传给 `score --observations`。候选融合、训练设置、推理阈值、标注及模型来源见核验指标。评分使用严格大于 0.50 的 IoU 匹配条件，逐标注版本汇总 PQ。
