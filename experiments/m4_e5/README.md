@@ -71,6 +71,14 @@ PYTHONPATH=src:. .team-env/bin/python -m m4_filament score \
 
 [完整核验指标与训练配置](results/m2_refiner_followup.json)
 
+## M2 多方向纠错实验
+
+在冻结的 M2 上比较候选补回、边界调整、拆分合并、质量筛查和神经 M4。180 张图用于拟合，两折各 69 张用于选择，另有 68 张用于锁定方案后的比较。各分区按日期隔离。68 张仍来自发布版 M2 的原训练分区。原 141 张及团队 103 张评测标注在本轮保持封存。
+
+第三折的原 M2 PQ 为 **0.42311**。候选组合加入恢复质量校准后，PQ 为 **0.43316**，误检减少 57 个，匹配减少 9 个。神经 M4 接在固定的筛查与补回组合后，PQ 从 0.43173 变为 0.43172，匹配数、误检和漏检均持平。
+
+[实验报告](results/m2_error_directions.md) · [核验指标与配置](results/m2_error_directions.json)
+
 ## 权重下载
 
 在 [model-weights-v1](https://github.com/wuliabc121/solar-filament-segmentation/releases/tag/model-weights-v1) 下载：
